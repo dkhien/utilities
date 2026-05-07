@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>To Do</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <!-- Left: theme controls -->
+    <div class="theme-controls">
+      <button class="theme-color" data-palette="pink" title="Pink theme" aria-label="Pink theme"></button>
+      <button class="theme-color" data-palette="blue" title="Blue theme" aria-label="Blue theme"></button>
+      <button id="darkToggle" title="Toggle dark/light" aria-label="Toggle dark mode">
+        <span class="icon-sun">☀</span><span class="icon-moon">☽</span>
+      </button>
+    </div>
+
+    <!-- Right: timer -->
+    <div class="timer-widget" id="timerWidget">
+      <div class="timer-display" id="timerDisplay">
+        <span class="timer-label" id="timerLabel">until</span>
+        <span class="timer-countdown" id="timerCountdown">--:--:--</span>
+        <button class="timer-target-btn" id="timerTargetBtn">17:00</button>
+      </div>
+      <div class="timer-edit" id="timerEdit" hidden>
+        <input type="time" id="timerInput" class="timer-time-input" value="17:00" />
+        <button id="timerSave" class="timer-save-btn">set</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="input-zone">
+      <div class="input-wrapper">
+        <input
+          type="text"
+          id="taskTitle"
+          class="task-input"
+          placeholder="what needs to be done?"
+          autocomplete="off"
+          spellcheck="false"
+          maxlength="120"
+        />
+        <div class="input-hints" id="inputHints">
+          <span class="hint-key">tab — add note</span>
+          <span class="hint-key">enter — save</span>
+        </div>
+      </div>
+      <div class="desc-wrapper" id="descWrapper">
+        <textarea
+          id="taskDesc"
+          class="desc-input"
+          placeholder="add a note… (optional)"
+          rows="2"
+          maxlength="500"
+        ></textarea>
+        <div class="input-hints">
+          <span class="hint-key">shift+enter — save</span>
+          <span class="hint-key">esc — close</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="task-section">
+      <ul class="task-list" id="taskList" role="list" aria-label="Tasks"></ul>
+      <p class="empty-state" id="emptyState">nothing here yet — start typing above ↑</p>
+    </section>
+  </main>
+
+  <!-- Help button -->
+  <button class="help-btn" id="helpBtn" title="Keyboard shortcuts">?</button>
+
+  <!-- Shortcuts modal -->
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+    <div class="modal">
+      <div class="modal-title">
+        shortcuts
+        <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+      </div>
+
+      <div class="shortcut-group">
+        <div class="shortcut-group-title">Adding tasks</div>
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Add task</span>
+          <div class="shortcut-keys"><kbd>Enter</kbd></div>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Open note field</span>
+          <div class="shortcut-keys"><kbd>Tab</kbd></div>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Save from note field</span>
+          <div class="shortcut-keys"><kbd>Shift</kbd><span>+</span><kbd>Enter</kbd></div>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Close note / cancel</span>
+          <div class="shortcut-keys"><kbd>Esc</kbd></div>
+        </div>
+      </div>
+
+      <div class="shortcut-group">
+        <div class="shortcut-group-title">Navigating tasks</div>
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Move between tasks</span>
+          <div class="shortcut-keys"><kbd>↑</kbd><span>/</span><kbd>↓</kbd></div>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Go back to input</span>
+          <div class="shortcut-keys"><kbd>↑</kbd> <span>on first</span></div>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Return to input</span>
+          <div class="shortcut-keys"><kbd>Esc</kbd></div>
+        </div>
+      </div>
+
+      <div class="shortcut-group">
+        <div class="shortcut-group-title">Task actions</div>
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Mark done / undone</span>
+          <div class="shortcut-keys"><kbd>Enter</kbd></div>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Expand / collapse note</span>
+          <div class="shortcut-keys"><kbd>Space</kbd></div>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Delete task</span>
+          <div class="shortcut-keys"><kbd>Del</kbd></div>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Open this guide</span>
+          <div class="shortcut-keys"><kbd>?</kbd></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
