@@ -91,6 +91,11 @@ function toggleDone(id) {
   tasks = [...tasks.filter(t => !t.done), ...tasks.filter(t => t.done)];
   saveTasks();
   renderAll();
+  // Restore focus to same task after re-render
+  setTimeout(() => {
+    const idx = tasks.findIndex(t => t.id === id);
+    if (idx >= 0) setFocus(idx);
+  }, 0);
 }
 
 function deleteTask(id) {
@@ -129,7 +134,7 @@ function startEdit(id) {
       <input class="edit-title" type="text" value="${escHtml(task.title)}" maxlength="120" spellcheck="false" autocomplete="off" />
       <textarea class="edit-desc" placeholder="add a note… (optional)" maxlength="500">${escHtml(task.desc)}</textarea>
       <div class="edit-actions">
-        <span class="hint-key">enter — save title &nbsp;·&nbsp; shift+enter — save note &nbsp;·&nbsp; esc — cancel</span>
+        <span class="hint-key">Enter — save title &nbsp;·&nbsp; Shift+Enter — save note &nbsp;·&nbsp; Esc — cancel</span>
       </div>
     </div>
   `;
@@ -160,11 +165,13 @@ function startEdit(id) {
   };
 
   titleEl.addEventListener('keydown', e => {
+    e.stopPropagation(); // prevent bubbling to li's handleTaskKey
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); save(); }
     if (e.key === 'Escape') { e.preventDefault(); cancelEdit(); }
     if (e.key === 'Tab') { e.preventDefault(); descEl.focus(); }
   });
   descEl.addEventListener('keydown', e => {
+    e.stopPropagation(); // prevent bubbling to li's handleTaskKey
     if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); save(); }
     if (e.key === 'Escape') { e.preventDefault(); cancelEdit(); }
     if (e.key === 'Tab') { e.preventDefault(); titleEl.focus(); }
@@ -316,6 +323,7 @@ function handleTaskKey(e, i, task, li, expandBtn, descWrap) {
   const active = document.activeElement;
   if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA') && li.contains(active)) return;
 
+
   switch (e.key) {
     case 'ArrowDown':
       e.preventDefault();
@@ -403,7 +411,6 @@ let timerInterval = null;
 let timerStopped  = false; // user manually stopped
 
 const timerLabel   = document.getElementById('timerLabel');
-const timerStopBtn = document.getElementById('timerStopBtn');
 const timerResetBtn= document.getElementById('timerResetBtn');
 
 function formatCountdown(ms) {
@@ -435,8 +442,6 @@ function tickTimer() {
     setTimerDisplay('00:00:00', true, 'done for today');
     clearInterval(timerInterval);
     timerInterval = null;
-    timerStopBtn.textContent = '⏸';
-    timerStopBtn.classList.remove('active');
     // auto-reset at midnight
     const now = new Date();
     const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 2);
@@ -452,35 +457,11 @@ function startTimer() {
   timerInput.value = timerTarget;
   clearInterval(timerInterval);
   timerInterval = null;
-  timerStopBtn.textContent = '⏸';
-  timerStopBtn.classList.remove('active');
   tickTimer();
   if (getTargetMs(timerTarget) > 0) {
     timerInterval = setInterval(tickTimer, 1000);
   }
 }
-
-// Stop / Resume
-timerStopBtn.addEventListener('click', () => {
-  if (timerStopped) {
-    // Resume
-    timerStopped = false;
-    timerStopBtn.textContent = '⏸';
-    timerStopBtn.classList.remove('active');
-    tickTimer();
-    if (getTargetMs(timerTarget) > 0) {
-      timerInterval = setInterval(tickTimer, 1000);
-    }
-  } else {
-    // Stop — freeze display at current value
-    timerStopped = true;
-    clearInterval(timerInterval);
-    timerInterval = null;
-    timerStopBtn.textContent = '▶';
-    timerStopBtn.classList.add('active');
-    if (timerLabel) timerLabel.textContent = 'paused';
-  }
-});
 
 // Reset — show 00:00:00 and freeze
 timerResetBtn.addEventListener('click', () => {
@@ -488,8 +469,6 @@ timerResetBtn.addEventListener('click', () => {
   clearInterval(timerInterval);
   timerInterval = null;
   setTimerDisplay('00:00:00', true, 'reset');
-  timerStopBtn.textContent = '▶';
-  timerStopBtn.classList.add('active');
 });
 
 timerTargetBtn.addEventListener('click', () => {

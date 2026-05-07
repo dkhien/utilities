@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>To Do</title>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=1778174801" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=1778176010" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;1,300&subset=vietnamese&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=1778174801" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Nunito:ital,wght@0,300;0,400;0,500;1,300&display=swap&subset=vietnamese" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=1778176010" />
 </head>
 <body>
 
@@ -30,7 +30,6 @@
         <button class="timer-target-btn" id="timerTargetBtn">17:00</button>
       </div>
       <div class="timer-controls">
-        <button class="timer-btn" id="timerStopBtn" title="Stop / Resume">⏸</button>
         <button class="timer-btn" id="timerResetBtn" title="Reset to 00:00:00">⏹</button>
       </div>
       <div class="timer-edit" id="timerEdit" hidden>
@@ -41,41 +40,43 @@
   </header>
 
   <main>
+    <div class="main-inner">
     <section class="input-zone">
       <div class="input-wrapper">
         <input
           type="text"
           id="taskTitle"
           class="task-input"
-          placeholder="what needs to be done?"
+          placeholder="What needs to be done?"
           autocomplete="off"
           spellcheck="false"
           maxlength="120"
         />
         <div class="input-hints" id="inputHints">
-          <span class="hint-key">tab — add note</span>
-          <span class="hint-key">enter — save</span>
+          <span class="hint-key">Tab — add note</span>
+          <span class="hint-key">Enter — save</span>
         </div>
       </div>
       <div class="desc-wrapper" id="descWrapper">
         <textarea
           id="taskDesc"
           class="desc-input"
-          placeholder="add a note… (optional)"
+          placeholder="Add a note… (optional)"
           rows="2"
           maxlength="500"
         ></textarea>
         <div class="input-hints">
-          <span class="hint-key">shift+enter — save</span>
-          <span class="hint-key">esc — close</span>
+          <span class="hint-key">Shift+Enter — save</span>
+          <span class="hint-key">Esc — close</span>
         </div>
       </div>
     </section>
 
     <section class="task-section">
       <ul class="task-list" id="taskList" role="list" aria-label="Tasks"></ul>
-      <p class="empty-state" id="emptyState">nothing here yet — start typing above ↑</p>
+      <p class="empty-state" id="emptyState">Nothing here yet — start typing above ↑</p>
     </section>
+    </div>
   </main>
 
   <!-- Help button -->
@@ -179,6 +180,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=1778174801"></script>
+  <script src="app.js?v=1778176010"></script>
 </body>
 </html>
