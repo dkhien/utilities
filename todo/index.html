@@ -7,7 +7,7 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;1,300&subset=vietnamese&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -28,6 +28,10 @@
         <span class="timer-label" id="timerLabel">until</span>
         <span class="timer-countdown" id="timerCountdown">--:--:--</span>
         <button class="timer-target-btn" id="timerTargetBtn">17:00</button>
+      </div>
+      <div class="timer-controls">
+        <button class="timer-btn" id="timerStopBtn" title="Stop / Resume">⏸</button>
+        <button class="timer-btn" id="timerResetBtn" title="Reset to 00:00:00">⏹</button>
       </div>
       <div class="timer-edit" id="timerEdit" hidden>
         <input type="time" id="timerInput" class="timer-time-input" value="17:00" />
@@ -112,6 +116,10 @@
           <div class="shortcut-keys"><kbd>↑</kbd><span>/</span><kbd>↓</kbd></div>
         </div>
         <div class="shortcut-row">
+          <span class="shortcut-desc">Reorder task</span>
+          <div class="shortcut-keys"><kbd>Shift</kbd><span>+</span><kbd>↑</kbd><span>/</span><kbd>↓</kbd></div>
+        </div>
+        <div class="shortcut-row">
           <span class="shortcut-desc">Go back to input</span>
           <div class="shortcut-keys"><kbd>↑</kbd> <span>on first</span></div>
         </div>
@@ -122,7 +130,7 @@
       </div>
 
       <div class="shortcut-group">
-        <div class="shortcut-group-title">Task actions</div>
+        <div class="shortcut-group-title">Task actions (when task is focused)</div>
         <div class="shortcut-row">
           <span class="shortcut-desc">Mark done / undone</span>
           <div class="shortcut-keys"><kbd>Enter</kbd></div>
@@ -132,9 +140,37 @@
           <div class="shortcut-keys"><kbd>Space</kbd></div>
         </div>
         <div class="shortcut-row">
+          <span class="shortcut-desc">Edit task</span>
+          <div class="shortcut-keys"><kbd>E</kbd></div>
+        </div>
+        <div class="shortcut-row">
           <span class="shortcut-desc">Delete task</span>
           <div class="shortcut-keys"><kbd>Del</kbd></div>
         </div>
+      </div>
+
+      <div class="shortcut-group">
+        <div class="shortcut-group-title">Edit mode</div>
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Save (from title field)</span>
+          <div class="shortcut-keys"><kbd>Enter</kbd></div>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Save (from note field)</span>
+          <div class="shortcut-keys"><kbd>Shift</kbd><span>+</span><kbd>Enter</kbd></div>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Switch between fields</span>
+          <div class="shortcut-keys"><kbd>Tab</kbd></div>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Cancel edit</span>
+          <div class="shortcut-keys"><kbd>Esc</kbd></div>
+        </div>
+      </div>
+
+      <div class="shortcut-group">
+        <div class="shortcut-group-title">Global</div>
         <div class="shortcut-row">
           <span class="shortcut-desc">Open this guide</span>
           <div class="shortcut-keys"><kbd>?</kbd></div>

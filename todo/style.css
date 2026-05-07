@@ -15,8 +15,8 @@
   --check-bg:  #ffedf1;
   --shadow:    rgba(220,150,170,.14);
 
-  --font-body: 'DM Sans', sans-serif;
-  --font-disp: 'DM Serif Display', serif;
+  --font-body: 'Nunito', sans-serif;
+  --font-disp: 'Nunito', sans-serif;
   --radius: 14px;
   --radius-sm: 8px;
   --transition: .18s cubic-bezier(.4,0,.2,1);
@@ -358,6 +358,15 @@ main {
 }
 .task-desc-wrap.open { max-height: 300px; }
 
+.task-link {
+  color: var(--accent-dk);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-all;
+  transition: opacity .15s;
+}
+.task-link:hover { opacity: .7; }
+
 .task-desc {
   padding: 0 16px 14px 52px;
   font-size: .95rem;
@@ -444,6 +453,40 @@ main {
 }
 .timer-target-btn:hover { opacity: .7; }
 
+.timer-controls {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.timer-btn {
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text-sub);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, border-color .15s, color .15s, transform .1s;
+  line-height: 1;
+}
+.timer-btn:hover {
+  background: var(--accent);
+  border-color: var(--accent-dk);
+  color: var(--text);
+  transform: scale(1.08);
+}
+.timer-btn.active {
+  background: var(--accent);
+  border-color: var(--accent-dk);
+  color: var(--text);
+}
+
 .timer-edit {
   position: absolute;
   top: calc(100% + 8px);
@@ -483,6 +526,104 @@ main {
   transition: background .15s;
 }
 .timer-save-btn:hover { background: var(--accent-dk); }
+
+/* ── Drag handle ─────────────────────────────────── */
+.drag-handle {
+  font-size: 16px;
+  color: var(--text-sub);
+  cursor: grab;
+  opacity: 0;
+  transition: opacity .15s, color .15s;
+  flex-shrink: 0;
+  line-height: 1;
+  padding: 0 2px;
+  user-select: none;
+}
+.task-item:hover .drag-handle,
+.task-item.focused .drag-handle { opacity: .35; }
+.drag-handle:hover { opacity: .8 !important; color: var(--accent-dk); }
+.drag-handle:active { cursor: grabbing; }
+
+/* Drag states */
+.task-item.dragging {
+  opacity: .4;
+  background: var(--hover-bg);
+}
+.task-item.drag-over-top {
+  border-top: 2.5px solid var(--accent-dk);
+}
+.task-item.drag-over-bottom {
+  border-bottom: 2.5px solid var(--accent-dk);
+}
+
+/* ── Edit button ────────────────────────────────── */
+.task-edit {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-sub);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity .15s, color .15s;
+  flex-shrink: 0;
+  padding: 0;
+}
+.task-item:hover .task-edit,
+.task-item.focused .task-edit { opacity: .5; }
+.task-edit:hover { opacity: 1 !important; color: var(--accent-dk); }
+
+/* ── Inline edit zone ────────────────────────────── */
+.task-item.editing {
+  border-color: var(--accent-dk);
+  box-shadow: 0 0 0 3px var(--accent);
+}
+
+.edit-zone {
+  padding: 10px 14px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.edit-title {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-weight: 400;
+  color: var(--text);
+  outline: none;
+  padding: 0;
+  letter-spacing: -.01em;
+}
+
+.edit-desc {
+  width: 100%;
+  border: none;
+  border-top: 1px solid var(--border);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: .95rem;
+  font-weight: 300;
+  color: var(--text);
+  outline: none;
+  resize: none;
+  padding: 8px 0 0;
+  line-height: 1.55;
+  min-height: 32px;
+}
+.edit-desc::placeholder { color: var(--text-sub); }
+
+.edit-actions {
+  display: flex;
+  padding-top: 2px;
+}
 
 /* ── Help button ─────────────────────────────────── */
 .help-btn {

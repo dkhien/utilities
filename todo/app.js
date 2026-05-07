@@ -98,17 +98,82 @@ function deleteTask(id) {
   tasks = tasks.filter(t => t.id !== id);
   saveTasks();
   renderAll();
-  // refocus a nearby task
   setTimeout(() => {
     const items = taskList.querySelectorAll('.task-item');
-    if (items.length > 0) {
-      const next = Math.min(i, items.length - 1);
-      setFocus(next);
-    } else {
-      titleInput.focus();
-    }
+    if (items.length > 0) setFocus(Math.min(i, items.length - 1));
+    else titleInput.focus();
   }, 0);
 }
+
+function moveTask(id, dir) {
+  const i = tasks.findIndex(t => t.id === id);
+  const j = i + dir;
+  if (j < 0 || j >= tasks.length) return;
+  [tasks[i], tasks[j]] = [tasks[j], tasks[i]];
+  saveTasks();
+  focusedIndex = j;
+  renderAll();
+  setTimeout(() => setFocus(j), 0);
+}
+
+// ── Edit ───────────────────────────────────────────
+function startEdit(id) {
+  const li = taskList.querySelector(`[data-id="${id}"]`);
+  if (!li) return;
+  const task = tasks.find(t => t.id === id);
+  if (!task) return;
+
+  li.classList.add('editing');
+  li.innerHTML = `
+    <div class="edit-zone">
+      <input class="edit-title" type="text" value="${escHtml(task.title)}" maxlength="120" spellcheck="false" autocomplete="off" />
+      <textarea class="edit-desc" placeholder="add a note… (optional)" maxlength="500">${escHtml(task.desc)}</textarea>
+      <div class="edit-actions">
+        <span class="hint-key">enter — save title &nbsp;·&nbsp; shift+enter — save note &nbsp;·&nbsp; esc — cancel</span>
+      </div>
+    </div>
+  `;
+
+  const titleEl = li.querySelector('.edit-title');
+  const descEl  = li.querySelector('.edit-desc');
+
+  const resize = () => { descEl.style.height = 'auto'; descEl.style.height = Math.min(descEl.scrollHeight, 120) + 'px'; };
+  descEl.addEventListener('input', resize);
+  resize();
+
+  titleEl.focus();
+  titleEl.setSelectionRange(titleEl.value.length, titleEl.value.length);
+
+  const save = () => {
+    const newTitle = titleEl.value.trim();
+    if (!newTitle) { cancelEdit(); return; }
+    task.title = newTitle;
+    task.desc  = descEl.value.trim();
+    saveTasks();
+    renderAll();
+    setTimeout(() => { const idx = tasks.findIndex(t => t.id === id); if (idx >= 0) setFocus(idx); }, 0);
+  };
+
+  const cancelEdit = () => {
+    renderAll();
+    setTimeout(() => { const idx = tasks.findIndex(t => t.id === id); if (idx >= 0) setFocus(idx); }, 0);
+  };
+
+  titleEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); save(); }
+    if (e.key === 'Escape') { e.preventDefault(); cancelEdit(); }
+    if (e.key === 'Tab') { e.preventDefault(); descEl.focus(); }
+  });
+  descEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); save(); }
+    if (e.key === 'Escape') { e.preventDefault(); cancelEdit(); }
+    if (e.key === 'Tab') { e.preventDefault(); titleEl.focus(); }
+  });
+}
+
+// ── Drag & drop state ──────────────────────────────
+let dragSrcId   = null;
+let dragOverId  = null;
 
 // ── Render ─────────────────────────────────────────
 function renderAll() {
@@ -121,42 +186,106 @@ function renderAll() {
     li.dataset.id = task.id;
     li.setAttribute('tabindex', '0');
     li.setAttribute('role', 'listitem');
+    li.setAttribute('draggable', 'true');
 
     li.innerHTML = `
       <div class="task-header">
+        <div class="drag-handle" title="Drag to reorder" tabindex="-1">⠿</div>
         <div class="task-check" title="Mark done">✓</div>
         <span class="task-title">${escHtml(task.title)}</span>
         ${task.desc ? `<button class="expand-btn" title="Expand note (Space)" tabindex="-1">▾</button>` : ''}
+        <button class="task-edit" title="Edit (E)" tabindex="-1">✎</button>
         <button class="task-delete" title="Delete (Del)" tabindex="-1">✕</button>
       </div>
       ${task.desc ? `
         <div class="task-desc-wrap">
-          <p class="task-desc">${escHtml(task.desc)}</p>
+          <p class="task-desc">${linkify(task.desc)}</p>
         </div>` : ''}
     `;
 
-    const check    = li.querySelector('.task-check');
-    const expandBtn= li.querySelector('.expand-btn');
-    const descWrap = li.querySelector('.task-desc-wrap');
-    const delBtn   = li.querySelector('.task-delete');
+    const check     = li.querySelector('.task-check');
+    const expandBtn = li.querySelector('.expand-btn');
+    const descWrap  = li.querySelector('.task-desc-wrap');
+    const editBtn   = li.querySelector('.task-edit');
+    const delBtn    = li.querySelector('.task-delete');
+    const handle    = li.querySelector('.drag-handle');
 
-    // Check circle only → toggle done
+    // ── Drag & drop ──
+    handle.addEventListener('mousedown', () => { li.setAttribute('draggable', 'true'); });
+
+    li.addEventListener('dragstart', e => {
+      dragSrcId = task.id;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', task.id);
+      requestAnimationFrame(() => li.classList.add('dragging'));
+    });
+
+    li.addEventListener('dragend', () => {
+      li.classList.remove('dragging');
+      taskList.querySelectorAll('.task-item').forEach(el => el.classList.remove('drag-over-top', 'drag-over-bottom'));
+      dragSrcId  = null;
+      dragOverId = null;
+    });
+
+    li.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (dragSrcId === task.id) return;
+      const rect = li.getBoundingClientRect();
+      const mid  = rect.top + rect.height / 2;
+      taskList.querySelectorAll('.task-item').forEach(el => el.classList.remove('drag-over-top', 'drag-over-bottom'));
+      li.classList.add(e.clientY < mid ? 'drag-over-top' : 'drag-over-bottom');
+      dragOverId = task.id;
+    });
+
+    li.addEventListener('dragleave', e => {
+      if (!li.contains(e.relatedTarget)) {
+        li.classList.remove('drag-over-top', 'drag-over-bottom');
+      }
+    });
+
+    li.addEventListener('drop', e => {
+      e.preventDefault();
+      if (dragSrcId === null || dragSrcId === task.id) return;
+
+      const fromIdx = tasks.findIndex(t => t.id === dragSrcId);
+      const toIdx   = tasks.findIndex(t => t.id === task.id);
+      if (fromIdx < 0 || toIdx < 0) return;
+
+      const rect    = li.getBoundingClientRect();
+      const insertAfter = e.clientY >= rect.top + rect.height / 2;
+      const insertIdx   = insertAfter ? toIdx + (fromIdx > toIdx ? 0 : 0) : toIdx;
+
+      const [moved] = tasks.splice(fromIdx, 1);
+      const adjustedTo = tasks.findIndex(t => t.id === task.id);
+      tasks.splice(insertAfter ? adjustedTo + 1 : adjustedTo, 0, moved);
+
+      saveTasks();
+      focusedIndex = tasks.findIndex(t => t.id === dragSrcId);
+      renderAll();
+    });
+
+    // ── Mouse interactions ──
     check.addEventListener('click', e => { e.stopPropagation(); toggleDone(task.id); });
+    editBtn.addEventListener('click', e => { e.stopPropagation(); startEdit(task.id); });
 
-    // Click anywhere on task → expand/collapse
+    li.addEventListener('dblclick', e => {
+      if (check.contains(e.target) || delBtn.contains(e.target) || handle.contains(e.target)) return;
+      startEdit(task.id);
+    });
+
     li.addEventListener('click', e => {
       if (check.contains(e.target)) return;
       if (delBtn.contains(e.target)) return;
+      if (editBtn.contains(e.target)) return;
+      if (handle.contains(e.target)) return;
       if (expandBtn && descWrap) toggleExpand(li, expandBtn, descWrap);
     });
 
-    // Delete
     delBtn.addEventListener('click', e => { e.stopPropagation(); deleteTask(task.id); });
 
-    // Keyboard
+    // ── Keyboard ──
     li.addEventListener('keydown', e => handleTaskKey(e, i, task, li, expandBtn, descWrap));
-
-    // Focus tracking
     li.addEventListener('focus', () => { focusedIndex = i; li.classList.add('focused'); });
     li.addEventListener('blur',  () => { li.classList.remove('focused'); });
     if (focusedIndex === i) li.classList.add('focused');
@@ -171,12 +300,20 @@ function toggleExpand(li, expandBtn, descWrap) {
 }
 
 function handleTaskKey(e, i, task, li, expandBtn, descWrap) {
+  // Don't hijack keys when an input/textarea inside the task is focused (e.g. edit mode)
+  const active = document.activeElement;
+  if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA') && li.contains(active)) return;
+
   switch (e.key) {
     case 'ArrowDown':
-      e.preventDefault(); setFocus(i + 1); break;
+      e.preventDefault();
+      if (e.shiftKey) moveTask(task.id, 1);
+      else setFocus(i + 1);
+      break;
     case 'ArrowUp':
       e.preventDefault();
-      if (i === 0) { titleInput.focus(); focusedIndex = -1; }
+      if (e.shiftKey) moveTask(task.id, -1);
+      else if (i === 0) { titleInput.focus(); focusedIndex = -1; }
       else setFocus(i - 1);
       break;
     case 'Enter':
@@ -190,6 +327,9 @@ function handleTaskKey(e, i, task, li, expandBtn, descWrap) {
       e.preventDefault(); deleteTask(task.id); break;
     case 'Escape':
       titleInput.focus(); break;
+    case 'e':
+    case 'E':
+      e.preventDefault(); startEdit(task.id); break;
     case '?':
       openModal(); break;
   }
@@ -202,9 +342,7 @@ function setFocus(i) {
   items[i].focus();
 }
 
-function clearFocus() {
-  focusedIndex = -1;
-}
+function clearFocus() { focusedIndex = -1; }
 
 // ── Input handling ─────────────────────────────────
 function openDesc() {
@@ -230,11 +368,10 @@ function submitTask() {
 }
 
 titleInput.addEventListener('keydown', e => {
-  if (e.key === 'Tab')        { e.preventDefault(); openDesc(); }
-  else if (e.key === 'Enter') { e.preventDefault(); submitTask(); }
+  if (e.key === 'Tab')            { e.preventDefault(); openDesc(); }
+  else if (e.key === 'Enter')     { e.preventDefault(); submitTask(); }
   else if (e.key === 'ArrowDown') { e.preventDefault(); setFocus(0); }
   else if (e.key === 'Escape')    { clearInputs(); }
-  else if (e.key === '?')         { openModal(); }
 });
 
 descInput.addEventListener('keydown', e => {
@@ -249,8 +386,13 @@ descInput.addEventListener('input', () => {
 });
 
 // ── Timer ──────────────────────────────────────────
-let timerTarget  = LS.get('timerTarget', '17:00');
-let timerInterval;
+let timerTarget   = LS.get('timerTarget', '17:00');
+let timerInterval = null;
+let timerStopped  = false; // user manually stopped
+
+const timerLabel   = document.getElementById('timerLabel');
+const timerStopBtn = document.getElementById('timerStopBtn');
+const timerResetBtn= document.getElementById('timerResetBtn');
 
 function formatCountdown(ms) {
   if (ms <= 0) return '00:00:00';
@@ -265,41 +407,78 @@ function getTargetMs(t) {
   const [h, m] = t.split(':').map(Number);
   const now    = new Date();
   const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
-  return target - now; // negative means already passed today
+  return target - now;
 }
 
-const timerLabel = document.getElementById('timerLabel');
+function setTimerDisplay(text, done = false, label = 'until') {
+  timerCountdown.textContent = text;
+  timerCountdown.classList.toggle('done', done);
+  if (timerLabel) timerLabel.textContent = label;
+}
 
 function tickTimer() {
+  if (timerStopped) return;
   const ms = getTargetMs(timerTarget);
   if (ms <= 0) {
-    // Target time has passed — stop, show done
-    timerCountdown.textContent = '00:00:00';
-    timerCountdown.classList.add('done');
-    if (timerLabel) timerLabel.textContent = 'done for today';
+    setTimerDisplay('00:00:00', true, 'done for today');
     clearInterval(timerInterval);
     timerInterval = null;
-    // Auto-reset at midnight next day
+    timerStopBtn.textContent = '⏸';
+    timerStopBtn.classList.remove('active');
+    // auto-reset at midnight
     const now = new Date();
     const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 2);
     setTimeout(startTimer, midnight - now);
   } else {
-    timerCountdown.textContent = formatCountdown(ms);
-    timerCountdown.classList.remove('done');
-    if (timerLabel) timerLabel.textContent = 'until';
+    setTimerDisplay(formatCountdown(ms), false, 'until');
   }
 }
 
 function startTimer() {
+  timerStopped = false;
   timerTargetBtn.textContent = timerTarget;
   timerInput.value = timerTarget;
   clearInterval(timerInterval);
   timerInterval = null;
-  tickTimer(); // sets correct state immediately
+  timerStopBtn.textContent = '⏸';
+  timerStopBtn.classList.remove('active');
+  tickTimer();
   if (getTargetMs(timerTarget) > 0) {
     timerInterval = setInterval(tickTimer, 1000);
   }
 }
+
+// Stop / Resume
+timerStopBtn.addEventListener('click', () => {
+  if (timerStopped) {
+    // Resume
+    timerStopped = false;
+    timerStopBtn.textContent = '⏸';
+    timerStopBtn.classList.remove('active');
+    tickTimer();
+    if (getTargetMs(timerTarget) > 0) {
+      timerInterval = setInterval(tickTimer, 1000);
+    }
+  } else {
+    // Stop — freeze display at current value
+    timerStopped = true;
+    clearInterval(timerInterval);
+    timerInterval = null;
+    timerStopBtn.textContent = '▶';
+    timerStopBtn.classList.add('active');
+    if (timerLabel) timerLabel.textContent = 'paused';
+  }
+});
+
+// Reset — show 00:00:00 and freeze
+timerResetBtn.addEventListener('click', () => {
+  timerStopped = true;
+  clearInterval(timerInterval);
+  timerInterval = null;
+  setTimerDisplay('00:00:00', true, 'reset');
+  timerStopBtn.textContent = '▶';
+  timerStopBtn.classList.add('active');
+});
 
 timerTargetBtn.addEventListener('click', () => {
   timerEdit.hidden = false;
@@ -328,7 +507,6 @@ document.addEventListener('click', e => {
   }
 });
 
-// Global ? shortcut when not typing
 document.addEventListener('keydown', e => {
   if (e.key === '?' && document.activeElement === document.body) openModal();
   if (e.key === 'Escape' && modalBackdrop.classList.contains('open')) closeModal();
@@ -336,7 +514,16 @@ document.addEventListener('keydown', e => {
 
 // ── Util ───────────────────────────────────────────
 function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function linkify(s) {
+  // escape first, then replace URLs with anchor tags
+  const escaped = escHtml(s);
+  return escaped.replace(
+    /(https?:\/\/[^\s<>"]+)/g,
+    '<a href="$1" target="_blank" rel="noopener noreferrer" class="task-link" onclick="event.stopPropagation()">$1</a>'
+  );
 }
 
 // ── Init ───────────────────────────────────────────
