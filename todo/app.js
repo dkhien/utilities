@@ -186,11 +186,15 @@ function renderAll() {
     li.dataset.id = task.id;
     li.setAttribute('tabindex', '0');
     li.setAttribute('role', 'listitem');
-    li.setAttribute('draggable', 'true');
-
     li.innerHTML = `
       <div class="task-header">
-        <div class="drag-handle" title="Drag to reorder" tabindex="-1">⠿</div>
+        <div class="drag-handle" title="Drag to reorder" tabindex="-1">
+          <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="3" cy="3"  r="1.5"/><circle cx="7" cy="3"  r="1.5"/>
+            <circle cx="3" cy="8"  r="1.5"/><circle cx="7" cy="8"  r="1.5"/>
+            <circle cx="3" cy="13" r="1.5"/><circle cx="7" cy="13" r="1.5"/>
+          </svg>
+        </div>
         <div class="task-check" title="Mark done">✓</div>
         <span class="task-title">${escHtml(task.title)}</span>
         ${task.desc ? `<button class="expand-btn" title="Expand note (Space)" tabindex="-1">▾</button>` : ''}
@@ -211,16 +215,24 @@ function renderAll() {
     const handle    = li.querySelector('.drag-handle');
 
     // ── Drag & drop ──
-    handle.addEventListener('mousedown', () => { li.setAttribute('draggable', 'true'); });
+    // Gate drag on handle — set flag on mousedown, clear on dragend/mouseup
+    let dragFromHandle = false;
+    handle.addEventListener('mousedown', e => {
+      dragFromHandle = true;
+      // Ensure draggable is active
+      li.setAttribute('draggable', 'true');
+    });
 
     li.addEventListener('dragstart', e => {
+      if (!dragFromHandle) { e.preventDefault(); return; }
       dragSrcId = task.id;
       e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', task.id);
+      e.dataTransfer.setData('text/plain', String(task.id));
       requestAnimationFrame(() => li.classList.add('dragging'));
     });
 
     li.addEventListener('dragend', () => {
+      dragFromHandle = false;
       li.classList.remove('dragging');
       taskList.querySelectorAll('.task-item').forEach(el => el.classList.remove('drag-over-top', 'drag-over-bottom'));
       dragSrcId  = null;
